@@ -65,8 +65,22 @@ def load_blocks(base_block, block_offset):
             for transaction in block["transactions"]:
                 transaction_details = get_transaction_info(
                     w3, transaction.hex())
+                transaction_details["value_wei"] = str(
+                    transaction_details["value"])
+                transaction_details["value"] = transaction_details["value"] / \
+                    pow(10, 18)
+                transaction_details["gas_wei"] = str(
+                    transaction_details["gas"])
+                transaction_details["gas"] = transaction_details["gas"] / \
+                    pow(10, 18)
+                transaction_details["gasPrice_wei"] = str(
+                    transaction_details["gasPrice"])
+                transaction_details["gasPrice"] = transaction_details["gasPrice"] / \
+                    pow(10, 18)
+
                 transactions.insert_one(transaction_details)
                 transaction_count += 1
+            continue
         else:
             continue
         print(
@@ -74,6 +88,7 @@ def load_blocks(base_block, block_offset):
                 block_count, transaction_count, base_block, base_block + block_offset
             )
         )
+        return
 
 
 load_blocks(BASE_BLOCK, BLOCK_OFFSET)
