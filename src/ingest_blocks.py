@@ -55,10 +55,7 @@ def load_blocks(base_block, block_offset):
     db = get_db_connection(DB_HOST, DB_PORT, DB_NAME)
     blocks = db[BLOCK_COLLECTION]
     transactions = db[TRANSACTION_COLLECTION]
-    block_count = 0
-    transaction_count = 0
-    for i in range(block_offset):
-        block_id = base_block+i
+    for block_id in range(base_block, base_block+block_offset+1):
         block = get_block_dict(w3, block_id)
         if block:
             block["totalDifficulty"] = str(block["totalDifficulty"])
