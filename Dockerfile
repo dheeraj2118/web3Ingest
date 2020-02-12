@@ -4,6 +4,6 @@ WORKDIR /usr/src/app
 COPY requirements.txt ../
 RUN pip install --no-cache-dir -r ../requirements.txt
 COPY . .
-RUN ls 
+RUN ls src 
 CMD ["python", "./src/get_blocks.py"]
 
