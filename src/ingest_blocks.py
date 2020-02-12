@@ -38,6 +38,7 @@ def get_block_dict(w3, block_number):
     except Exception as e:
         logging.error(
             "Error getting block {} error {}".format(block_number, e))
+        return False
 
 
 def get_transaction_info(w3, transaction_hash):
@@ -46,6 +47,7 @@ def get_transaction_info(w3, transaction_hash):
     except Exception as e:
         logging.error(
             "Error while getting transaction Information {}".format(e))
+        return False
 
 
 def load_blocks(base_block, block_offset):
@@ -56,38 +58,46 @@ def load_blocks(base_block, block_offset):
     block_count = 0
     transaction_count = 0
     for i in range(block_offset):
-        block = get_block_dict(w3, base_block + i)
+        block_id = base_block+i
+        block = get_block_dict(w3, block_id)
         if block:
             block["totalDifficulty"] = str(block["totalDifficulty"])
             block["difficulty"] = str(block["difficulty"])
-            blocks.insert_one(block)
-            block_count += 1
+            try:
+                blocks.insert_one(block)
+            except Exception as e:
+                logging.info(
+                    "{} Block Insertion Failed {}".format(block_id, e))
             for transaction in block["transactions"]:
+                transaction_id = transaction.hex()
                 transaction_details = get_transaction_info(
                     w3, transaction.hex())
-                transaction_details["value_wei"] = str(
-                    transaction_details["value"])
-                transaction_details["value"] = transaction_details["value"] / \
-                    pow(10, 18)
-                transaction_details["gas_wei"] = str(
-                    transaction_details["gas"])
-                transaction_details["gas"] = transaction_details["gas"] / \
-                    pow(10, 18)
-                transaction_details["gasPrice_wei"] = str(
-                    transaction_details["gasPrice"])
-                transaction_details["gasPrice"] = transaction_details["gasPrice"] / \
-                    pow(10, 18)
+                if transaction_details:
+                    transaction_details["value_wei"] = str(
+                        transaction_details["value"])
+                    transaction_details["value"] = transaction_details["value"] / \
+                        pow(10, 18)
+                    transaction_details["gas_wei"] = str(
+                        transaction_details["gas"])
+                    transaction_details["gas"] = transaction_details["gas"] / \
+                        pow(10, 18)
+                    transaction_details["gasPrice_wei"] = str(
+                        transaction_details["gasPrice"])
+                    transaction_details["gasPrice"] = transaction_details["gasPrice"] / \
+                        pow(10, 18)
+                    try:
+                        transactions.insert_one(transaction_details)
+                    except Exception as e:
+                        logging.info(
+                            "{} Transaction Insertion Failed {}".format(transaction_id, e))
 
-                transactions.insert_one(transaction_details)
-                transaction_count += 1
-            continue
+                else:
+                    logging.info("Transaction {}  {}".format(
+                        transaction_id, "Failed"))
+                    continue
         else:
+            logging.info("Block {} {}".format(block_id, "Failed"))
             continue
-        print(
-            "Ingested {} blocks and {} transactions from block number {} to {}".format(
-                block_count, transaction_count, base_block, base_block + block_offset
-            )
-        )
         return
 
 
