@@ -7,7 +7,7 @@ DB_PORT = os.environ.get("DB_PORT", "27017")
 WEB3_PROVIDER = os.environ.get("WEB3_PROVIDER", "http://3.219.79.88:8545")
 BASE_BLOCK = os.environ.get("BASE_BLOCK", 1)
 BLOCK_OFFSET = os.environ.get("BLOCK_OFFSET", 10000)
-LOG_FILE = "../log/blocks_{}_{}.log".format(
+LOG_FILE = "/home/ubuntu/log/blocks_{}_{}.log".format(
     BASE_BLOCK, BASE_BLOCK+BLOCK_OFFSET-1)
 DB_NAME = os.environ.get("DB_NAME", "eth_db")
 BLOCK_COLLECTION = os.environ.get("BLOCK_COLLECTION", "blocks")
