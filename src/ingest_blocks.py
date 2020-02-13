@@ -4,7 +4,7 @@ from config import *
 import logging
 import sys
 
-logging.basicConfig(filename=LOG_FILE)
+logging.basicConfig(filename=LOG_FILE, level=logging.INFO)
 
 
 def get_web3_connection(provider):
