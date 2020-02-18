@@ -1,0 +1,12 @@
+version: "2"
+
+services:
+  web3ingest.2000001.2500000:
+    container_name: web3ingest.2000001.2500000
+    image: web3ingest:3.0.0
+    environment:
+      - BASE_BLOCK=2000001
+      - BLOCK_OFFSET=500000
+      - WEB3_PROVIDER=http://3.219.79.88:8545
+    volumes:
+      - /home/ubuntu/logs:/usr/log
