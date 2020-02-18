@@ -1,0 +1,12 @@
+version: "2"
+
+services:
+  <arbitary service-name>:
+    container_name: <any arbitary name>
+    image: web3ingest:3.0.0
+    environment:
+      - BASE_BLOCK=<STARTING BLOCK NUMBER>
+      - BLOCK_OFFSET=<NUMBER OF BLOCKS>
+      - WEB3_PROVIDER=<http://<GETHNODE>:<PORT>/>
+    volumes:
+      - /home/ubuntu/logs:/usr/log
