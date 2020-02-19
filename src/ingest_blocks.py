@@ -51,12 +51,16 @@ def get_transaction_info(w3, transaction_hash):
 
 
 def load_blocks(base_block, block_offset):
-    print(base_block)
-    print(block_offset)
+
     w3 = get_web3_connection(WEB3_PROVIDER)
     db = get_db_connection(DB_HOST, DB_PORT, DB_NAME)
+    print(db)
     blocks = db[BLOCK_COLLECTION]
     transactions = db[TRANSACTION_COLLECTION]
+    if base_block == 0:
+        base_block = get_latest_block_on_db(db)+1
+    if block_offset == 0:
+        block_offset = get_latest_block_on_node(w3) - base_block
     for block_id in range(base_block, base_block+block_offset+1):
         print(block_id)
         block = get_block_dict(w3, block_id)
@@ -104,6 +108,24 @@ def load_blocks(base_block, block_offset):
             logging.info("Block {} {}".format(block_id, "Failed"))
             continue
     return
+
+
+def get_latest_block_on_db(db_connection):
+    try:
+        result = list(db_connection.blocks.find(
+            None, {"number": 1}).sort("number", -1).limit(1))
+        print("??????????", result)
+        return result[0]['number']
+    except Exception as e:
+        logging.error("Failed get latest block on DB{}".format(e))
+
+
+def get_latest_block_on_node(w3):
+    try:
+        latest = w3.eth.getBlock('latest')['number']
+        return latest
+    except Exception as e:
+        logging.error("Failed get latest block on Node {}".format(e))
 
 
 load_blocks(BASE_BLOCK, BLOCK_OFFSET)
