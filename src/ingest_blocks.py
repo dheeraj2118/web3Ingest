@@ -136,7 +136,7 @@ def get_latest_block_on_node(w3):
 
 def run_loop():
     while not executing_load:
-        load_blocks(BASE_BLOCK, BLOCK_OFFSET)
+        load_blocks()
 
 
 run_loop()
