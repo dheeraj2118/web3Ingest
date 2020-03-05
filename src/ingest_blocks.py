@@ -5,6 +5,8 @@ import logging
 import sys
 
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO)
+executing_load = False
+mongoClient = None
 
 
 def get_web3_connection(provider):
@@ -19,6 +21,7 @@ def get_web3_connection(provider):
 
 def get_db_connection(db_host, db_port, db_name):
     try:
+        global mongoClient
         mongoClient = MongoClient(db_host, db_port)
         logging.info("Connected to database client")
         return mongoClient[db_name]
@@ -50,19 +53,19 @@ def get_transaction_info(w3, transaction_hash):
         return False
 
 
-def load_blocks(base_block, block_offset):
-
+def load_blocks(block_height_db=0, block_height_node=0):
+    executing_load = True
     w3 = get_web3_connection(WEB3_PROVIDER)
     db = get_db_connection(DB_HOST, DB_PORT, DB_NAME)
     print(db)
     blocks = db[BLOCK_COLLECTION]
     transactions = db[TRANSACTION_COLLECTION]
-    if base_block == 0:
-        base_block = get_latest_block_on_db(db)+1
-    if block_offset == 0:
-        block_offset = get_latest_block_on_node(w3) - base_block
-    for block_id in range(base_block, base_block+block_offset+1):
-        print(block_id)
+    if block_height_db == 0:
+        block_height_db = get_latest_block_on_db(db)+1
+    if block_height_node == 0:
+        block_height_node = get_latest_block_on_node(w3)
+    print(block_height_db, block_height_node)
+    for block_id in range(block_height_db, block_height_node+1):
         block = get_block_dict(w3, block_id)
         if block:
             block["totalDifficulty"] = str(block["totalDifficulty"])
@@ -90,6 +93,7 @@ def load_blocks(base_block, block_offset):
                         transaction_details["gasPrice"])
                     transaction_details["gasPrice"] = transaction_details["gasPrice"] / pow(
                         10, 18)
+                    transaction_details["timestamp"] = block["timestamp"]
                     try:
                         transactions.insert_one(transaction_details)
                         print("success: {}/{}".format(block_id, transaction_id))
@@ -107,6 +111,9 @@ def load_blocks(base_block, block_offset):
             print("Block {} {}".format(block_id, "Failed"))
             logging.info("Block {} {}".format(block_id, "Failed"))
             continue
+    executing_load = False
+    mongoClient.close()
+    print("Disconnected with DB")
     return
 
 
@@ -114,7 +121,6 @@ def get_latest_block_on_db(db_connection):
     try:
         result = list(db_connection.blocks.find(
             None, {"number": 1}).sort("number", -1).limit(1))
-        print("??????????", result)
         return result[0]['number']
     except Exception as e:
         logging.error("Failed get latest block on DB{}".format(e))
@@ -128,4 +134,9 @@ def get_latest_block_on_node(w3):
         logging.error("Failed get latest block on Node {}".format(e))
 
 
-load_blocks(BASE_BLOCK, BLOCK_OFFSET)
+def run_loop():
+    while not executing_load:
+        load_blocks(BASE_BLOCK, BLOCK_OFFSET)
+
+
+run_loop()
